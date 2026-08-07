@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# Project generated logs and weights
+habit_log.csv
+*.pt
+yolov8n.pt
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/

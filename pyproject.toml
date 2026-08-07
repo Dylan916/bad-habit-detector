@@ -1,0 +1,13 @@
+[project]
+name = "bad-habit-tracker"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "mediapipe<=0.10.14",
+    "numpy>=2.5.1",
+    "opencv-python>=5.0.0.93",
+    "sounddevice>=0.5.5",
+    "ultralytics>=8.4.115",
+]
