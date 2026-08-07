@@ -16,7 +16,7 @@ SCRATCH_HEAD_ZONE_MARGIN = 0.08  # Extra margin around face bbox (normalized coo
 # Scratching involves rapid small hand movements. We track hand positions over recent
 # frames and require a minimum "jitter" (average frame-to-frame displacement) to
 # distinguish scratching from a static raised hand.
-SCRATCH_JITTER_THRESH = 0.01       # Min avg frame-to-frame displacement (normalized) to count as motion
+SCRATCH_JITTER_THRESH = 0.008       # Min avg frame-to-frame displacement (normalized) to count as motion
 SCRATCH_JITTER_WINDOW = 8          # Number of recent frames to track for jitter calculation
 
 # --- Alert Trigger ---
