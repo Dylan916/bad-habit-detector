@@ -6,13 +6,23 @@ Tune these constants to adjust sensitivity for your webcam setup.
 # ==========================================
 # 1. Hair Scratching Detection Settings
 # ==========================================
-# Vertical normalized offset above top-of-head (Face Mesh landmark 10)
-# Lower y in normalized space means higher on screen.
-# Hand above (head_y - SCRATCH_HEAD_MARGIN) triggers potential scratching.
-SCRATCH_HEAD_MARGIN = 0.05
+# --- Head Proximity Zone ---
+# Instead of a simple y-line, we define a zone around the head using face mesh landmarks.
+# The hand must be within this expanded bounding box to be considered "near the head".
+# Normalized margin added around the face bounding box (derived from forehead, chin, temples).
+SCRATCH_HEAD_ZONE_MARGIN = 0.08  # Extra margin around face bbox (normalized coords)
 
-# Number of consecutive frames the condition must hold to trigger alert
-SCRATCH_CONSECUTIVE_FRAMES = 8
+# --- Motion / Jitter Detection ---
+# Scratching involves rapid small hand movements. We track hand positions over recent
+# frames and require a minimum "jitter" (average frame-to-frame displacement) to
+# distinguish scratching from a static raised hand.
+SCRATCH_JITTER_THRESH = 0.01       # Min avg frame-to-frame displacement (normalized) to count as motion
+SCRATCH_JITTER_WINDOW = 8          # Number of recent frames to track for jitter calculation
+
+# --- Alert Trigger ---
+# Number of consecutive frames with BOTH conditions (near head + jittering) to trigger alert
+SCRATCH_CONSECUTIVE_FRAMES = 12
+
 
 # ==========================================
 # 2. Finger / Nail Biting Detection Settings

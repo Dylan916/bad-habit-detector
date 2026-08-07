@@ -1,12 +1,7 @@
-"""
-Habit Detection Rules Engine.
-Evaluates frame landmark data and YOLO results against configurable thresholds,
-managing state counters, alert cooldowns, audio playback, and CSV logging.
-"""
-
 import math
 import time
-from typing import Dict, Any, Optional, List
+from collections import deque
+from typing import Dict, Any, Optional, List, Tuple
 import config
 from audio_notifier import AudioNotifier
 from logger import HabitLogger
@@ -39,20 +34,75 @@ class HabitRulesEngine:
         # Latest phone bounding box
         self.last_phone_box: Optional[List[int]] = None
 
-    def evaluate_scratching(self, head_top: Optional[tuple], hand_points: List[tuple]) -> bool:
-        """
-        Hair Scratching Rule: Any hand landmark's y-coordinate stays above
-        (head_top_y - SCRATCH_HEAD_MARGIN) for N consecutive frames.
-        """
-        is_scratching_this_frame = False
-        if head_top and hand_points:
-            head_y = head_top[1]
-            threshold_y = head_y - config.SCRATCH_HEAD_MARGIN
+        # --- Scratch motion tracking ---
+        # Stores recent hand centroid positions (normalized) for jitter calculation
+        self.hand_history: deque = deque(maxlen=config.SCRATCH_JITTER_WINDOW)
+        self.current_jitter: float = 0.0
 
-            for _, hy in hand_points:
-                if hy < threshold_y:
-                    is_scratching_this_frame = True
-                    break
+    def _get_hand_centroid_near_head(
+        self, hand_points: List[Tuple[float, float]], head_bbox: Tuple[float, float, float, float]
+    ) -> Optional[Tuple[float, float]]:
+        """
+        Returns the centroid (avg x, avg y) of hand landmarks that fall within
+        the expanded head zone, or None if no hand points are near the head.
+        """
+        margin = config.SCRATCH_HEAD_ZONE_MARGIN
+        x_min, y_min, x_max, y_max = head_bbox
+        # Expand the box: widen horizontally and extend upward (for hair above forehead)
+        zone_x_min = x_min - margin
+        zone_x_max = x_max + margin
+        zone_y_min = y_min - margin * 2  # Extra upward margin for hair above head
+        zone_y_max = y_min + (y_max - y_min) * 0.3  # Only upper 1/3 of face (forehead/hair, NOT cheeks)
+
+        near_points = []
+        for hx, hy in hand_points:
+            if zone_x_min <= hx <= zone_x_max and zone_y_min <= hy <= zone_y_max:
+                near_points.append((hx, hy))
+
+        if not near_points:
+            return None
+
+        avg_x = sum(p[0] for p in near_points) / len(near_points)
+        avg_y = sum(p[1] for p in near_points) / len(near_points)
+        return (avg_x, avg_y)
+
+    def _compute_jitter(self) -> float:
+        """
+        Computes average frame-to-frame Euclidean displacement of the hand centroid
+        over the recent history window. High jitter = scratching motion.
+        """
+        if len(self.hand_history) < 2:
+            return 0.0
+        total_disp = 0.0
+        count = 0
+        for i in range(1, len(self.hand_history)):
+            prev = self.hand_history[i - 1]
+            curr = self.hand_history[i]
+            if prev is not None and curr is not None:
+                total_disp += math.hypot(curr[0] - prev[0], curr[1] - prev[1])
+                count += 1
+        return total_disp / count if count > 0 else 0.0
+
+    def evaluate_scratching(
+        self, head_bbox: Optional[Tuple[float, float, float, float]], hand_points: List[tuple]
+    ) -> bool:
+        """
+        Hair Scratching Rule:
+        1. Hand must be within the expanded head bounding box (proximity check).
+        2. Hand must be jittering (rapid small movements = scratching motion).
+        Both conditions must hold for N consecutive frames to trigger an alert.
+        """
+        centroid = None
+        if head_bbox and hand_points:
+            centroid = self._get_hand_centroid_near_head(hand_points, head_bbox)
+
+        # Track hand position history for jitter
+        self.hand_history.append(centroid)
+        self.current_jitter = self._compute_jitter()
+
+        is_near_head = centroid is not None
+        is_jittering = self.current_jitter >= config.SCRATCH_JITTER_THRESH
+        is_scratching_this_frame = is_near_head and is_jittering
 
         if is_scratching_this_frame:
             self.scratch_counter += 1
@@ -67,7 +117,7 @@ class HabitRulesEngine:
             self.last_scratch_alert = now
             self.total_scratch_count += 1
             self.audio.play_beep(config.SCRATCH_BEEP_FREQ, config.BEEP_DURATION)
-            self.logger.log_habit("Hair Scratching", f"Counter: {self.scratch_counter}")
+            self.logger.log_habit("Hair Scratching", f"Jitter: {self.current_jitter:.4f}")
             return True
 
         return False

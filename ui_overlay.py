@@ -28,8 +28,10 @@ class UIOverlay:
         fps: float,
         debug_mode: bool,
         head_top: Optional[Tuple[float, float]] = None,
+        head_bbox: Optional[Tuple[float, float, float, float]] = None,
         mouth_center: Optional[Tuple[float, float]] = None,
-        mouth_gap: float = 0.0
+        mouth_gap: float = 0.0,
+        scratch_jitter: float = 0.0
     ) -> cv2.Mat:
         """
         Renders the complete HUD overlay onto frame.
@@ -79,12 +81,21 @@ class UIOverlay:
 
         # 4. Debug Guides (If Debug Mode is Enabled)
         if debug_mode:
-            # Hair threshold line
-            if head_top:
-                hx_px, hy_px = int(head_top[0] * w), int(head_top[1] * h)
-                thresh_y_px = int((head_top[1] - config.SCRATCH_HEAD_MARGIN) * h)
-                cv2.line(frame, (0, thresh_y_px), (w, thresh_y_px), self.COLOR_DEBUG_GUIDE, 1, cv2.LINE_AA)
-                cv2.putText(frame, "Scratch Threshold Line", (10, max(15, thresh_y_px - 5)), self.font, 0.4, self.COLOR_DEBUG_GUIDE, 1, cv2.LINE_AA)
+            # Head scratch zone (expanded bounding box around head)
+            if head_bbox:
+                margin = config.SCRATCH_HEAD_ZONE_MARGIN
+                bx_min, by_min, bx_max, by_max = head_bbox
+                zone_x1 = int((bx_min - margin) * w)
+                zone_y1 = int((by_min - margin * 2) * h)
+                zone_x2 = int((bx_max + margin) * w)
+                zone_y2 = int((by_min + (by_max - by_min) * 0.3) * h)
+                cv2.rectangle(frame, (zone_x1, zone_y1), (zone_x2, zone_y2), self.COLOR_DEBUG_GUIDE, 1, cv2.LINE_AA)
+                cv2.putText(frame, "Scratch Zone", (zone_x1, max(15, zone_y1 - 5)), self.font, 0.4, self.COLOR_DEBUG_GUIDE, 1, cv2.LINE_AA)
+
+                # Jitter score
+                jitter_color = self.COLOR_ALERT if scratch_jitter >= config.SCRATCH_JITTER_THRESH else self.COLOR_OK
+                jitter_text = f"Jitter: {scratch_jitter:.4f} (min: {config.SCRATCH_JITTER_THRESH})"
+                cv2.putText(frame, jitter_text, (zone_x1, zone_y2 + 18), self.font, 0.4, jitter_color, 1, cv2.LINE_AA)
 
             # Mouth threshold circle & gap status
             if mouth_center:

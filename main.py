@@ -103,7 +103,7 @@ def main():
                 phone_detected, phone_conf, phone_box = yolo_detector.detect(frame)
 
             # 5. Evaluate Rules & Trigger Alerts
-            rules_engine.evaluate_scratching(lm_data["head_top"], lm_data["hand_points"])
+            rules_engine.evaluate_scratching(lm_data["head_bbox"], lm_data["hand_points"])
             rules_engine.evaluate_biting(lm_data["mouth_center"], lm_data["hand_points"], lm_data["mouth_gap"])
             rules_engine.evaluate_phone(phone_detected, phone_conf, phone_box, lm_data["hand_points"], frame.shape)
 
@@ -115,8 +115,10 @@ def main():
                 fps=fps,
                 debug_mode=debug_mode,
                 head_top=lm_data["head_top"],
+                head_bbox=lm_data["head_bbox"],
                 mouth_center=lm_data["mouth_center"],
-                mouth_gap=lm_data["mouth_gap"]
+                mouth_gap=lm_data["mouth_gap"],
+                scratch_jitter=rules_engine.current_jitter
             )
 
             # 7. Display Frame & Listen to Keyboard Input
