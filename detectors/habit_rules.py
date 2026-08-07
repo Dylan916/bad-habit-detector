@@ -109,11 +109,27 @@ class HabitRulesEngine:
 
         return False
 
-    def evaluate_phone(self, phone_detected: bool, conf: float, box: Optional[List[int]]) -> bool:
+    def evaluate_phone(self, phone_detected: bool, conf: float, box: Optional[List[int]], hand_points: List[tuple] = [], frame_shape: tuple = (720, 1280)) -> bool:
         """
         Phone Use Rule: YOLO detect cell phone held for N consecutive check intervals.
+        Optionally requires hand landmarks to overlap with the phone bounding box.
         """
-        if phone_detected:
+        is_held_by_hand = True
+        if phone_detected and box and config.PHONE_REQUIRE_HAND_HOLDING:
+            is_held_by_hand = False
+            h, w = frame_shape[:2] if len(frame_shape) >= 2 else (720, 1280)
+            x1, y1, x2, y2 = box
+            margin = 30  # Margin around phone box in pixels
+
+            for hx, hy in hand_points:
+                px, py = int(hx * w), int(hy * h)
+                if (x1 - margin) <= px <= (x2 + margin) and (y1 - margin) <= py <= (y2 + margin):
+                    is_held_by_hand = True
+                    break
+
+        valid_phone_detection = phone_detected and is_held_by_hand
+
+        if valid_phone_detection:
             self.phone_counter += 1
             self.last_phone_box = box
         else:

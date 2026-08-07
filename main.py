@@ -104,8 +104,8 @@ def main():
 
             # 5. Evaluate Rules & Trigger Alerts
             rules_engine.evaluate_scratching(lm_data["head_top"], lm_data["hand_points"])
-            rules_engine.evaluate_biting(lm_data["mouth_center"], lm_data["hand_points"])
-            rules_engine.evaluate_phone(phone_detected, phone_conf, phone_box)
+            rules_engine.evaluate_biting(lm_data["mouth_center"], lm_data["hand_points"], lm_data["mouth_gap"])
+            rules_engine.evaluate_phone(phone_detected, phone_conf, phone_box, lm_data["hand_points"], frame.shape)
 
             # 6. Render HUD Overlay
             summary = rules_engine.get_status_summary()
@@ -115,7 +115,8 @@ def main():
                 fps=fps,
                 debug_mode=debug_mode,
                 head_top=lm_data["head_top"],
-                mouth_center=lm_data["mouth_center"]
+                mouth_center=lm_data["mouth_center"],
+                mouth_gap=lm_data["mouth_gap"]
             )
 
             # 7. Display Frame & Listen to Keyboard Input

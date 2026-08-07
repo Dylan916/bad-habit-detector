@@ -36,14 +36,17 @@ BITING_CONSECUTIVE_FRAMES = 8
 # COCO class ID for "cell phone" is 67
 PHONE_COCO_CLASS_ID = 67
 
-# Minimum confidence threshold for cell phone detection
-PHONE_CONF_THRESH = 0.50
+# Minimum confidence threshold for cell phone detection (increase to 0.65+ to reduce false positives)
+PHONE_CONF_THRESH = 0.65
+
+# Require a hand to be touching/holding the phone bounding box to trigger alert
+PHONE_REQUIRE_HAND_HOLDING = True
 
 # Perform YOLO inference every N frames to save CPU/GPU resources
 PHONE_CHECK_INTERVAL = 5
 
 # Number of consecutive positive YOLO check intervals required to trigger alert
-PHONE_CONSECUTIVE_CHECKS = 2
+PHONE_CONSECUTIVE_CHECKS = 3
 
 # ==========================================
 # 4. Alert & Audio Settings

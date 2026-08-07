@@ -28,7 +28,8 @@ class UIOverlay:
         fps: float,
         debug_mode: bool,
         head_top: Optional[Tuple[float, float]] = None,
-        mouth_center: Optional[Tuple[float, float]] = None
+        mouth_center: Optional[Tuple[float, float]] = None,
+        mouth_gap: float = 0.0
     ) -> cv2.Mat:
         """
         Renders the complete HUD overlay onto frame.
@@ -85,12 +86,14 @@ class UIOverlay:
                 cv2.line(frame, (0, thresh_y_px), (w, thresh_y_px), self.COLOR_DEBUG_GUIDE, 1, cv2.LINE_AA)
                 cv2.putText(frame, "Scratch Threshold Line", (10, max(15, thresh_y_px - 5)), self.font, 0.4, self.COLOR_DEBUG_GUIDE, 1, cv2.LINE_AA)
 
-            # Mouth threshold circle
+            # Mouth threshold circle & gap status
             if mouth_center:
                 mx_px, my_px = int(mouth_center[0] * w), int(mouth_center[1] * h)
                 radius_px = int(config.BITING_MOUTH_THRESH * min(w, h))
                 cv2.circle(frame, (mx_px, my_px), radius_px, self.COLOR_DEBUG_GUIDE, 1, cv2.LINE_AA)
-                cv2.putText(frame, "Mouth Zone", (mx_px - 35, my_px), self.font, 0.4, self.COLOR_DEBUG_GUIDE, 1, cv2.LINE_AA)
+                is_open = mouth_gap >= config.MOUTH_OPEN_THRESH
+                mouth_status = f"Mouth: {'OPEN' if is_open else 'CLOSED'} ({mouth_gap:.3f})"
+                cv2.putText(frame, mouth_status, (mx_px - 45, my_px + 20), self.font, 0.45, self.COLOR_ALERT if is_open else self.COLOR_OK, 1, cv2.LINE_AA)
 
         # 5. Bottom Shortcut Legend
         cv2.rectangle(frame, (0, h - 30), (w, h), self.COLOR_BG, -1)
