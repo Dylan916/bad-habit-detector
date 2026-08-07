@@ -43,20 +43,21 @@ BITING_CONSECUTIVE_FRAMES = 8
 # ==========================================
 # 3. Phone Use Detection Settings (YOLOv8)
 # ==========================================
-# COCO class ID for "cell phone" is 67
-PHONE_COCO_CLASS_ID = 67
+# COCO class IDs: 67 = "cell phone", 65 = "remote" (tilted/sideways phones frequently trigger class 65)
+PHONE_COCO_CLASS_IDS = [67]
 
-# Minimum confidence threshold for cell phone detection (increase to 0.65+ to reduce false positives)
-PHONE_CONF_THRESH = 0.65
+# Minimum confidence threshold for cell phone detection
+PHONE_CONF_THRESH = 0.30
 
 # Require a hand to be touching/holding the phone bounding box to trigger alert
-PHONE_REQUIRE_HAND_HOLDING = True
+# NOTE: Set to False because holding a phone occludes the hand from MediaPipe
+PHONE_REQUIRE_HAND_HOLDING = False
 
 # Perform YOLO inference every N frames to save CPU/GPU resources
-PHONE_CHECK_INTERVAL = 5
+PHONE_CHECK_INTERVAL = 8
 
 # Number of consecutive positive YOLO check intervals required to trigger alert
-PHONE_CONSECUTIVE_CHECKS = 3
+PHONE_CONSECUTIVE_CHECKS = 2
 
 # ==========================================
 # 4. Alert & Audio Settings

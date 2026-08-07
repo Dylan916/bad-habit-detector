@@ -4,9 +4,17 @@ Runs real-time webcam processing loop, integrating landmark tracking, YOLO objec
 rules engine, non-blocking audio alerts, CSV logging, and HUD UI rendering.
 """
 
-import cv2
-import time
+import os
 import sys
+import time
+import warnings
+
+# Suppress background logging noise from TensorFlow, Protobuf, and MediaPipe C++
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["GL_LOG_LEVEL"] = "0"
+warnings.filterwarnings("ignore")
+
+import cv2
 import config
 from audio_notifier import AudioNotifier
 from logger import HabitLogger
