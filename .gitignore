@@ -18,3 +18,7 @@ yolov8n.pt
 .DS_Store
 .vscode/
 .idea/
+
+# Large original media backups
+assets/*_original.gif
+assets/*_backup.gif

@@ -2,7 +2,7 @@
 
 A real-time Python desktop application that monitors a webcam feed to detect three unwanted habits — **hair scratching**, **finger/nail biting**, and **phone use** — providing real-time HUD alerts, synthesized audio notifications, and CSV event logging.
 
-![demo](demo.gif)
+![Bad Habit Detector Demo](assets/demo.gif)
 
 ---
 
